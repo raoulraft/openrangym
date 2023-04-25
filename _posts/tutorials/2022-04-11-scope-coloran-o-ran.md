@@ -41,6 +41,11 @@ First, base Docker images, used to build the RIC images, are imported. Then, the
 
 After the building process completes, the Docker images are initialized as containers on a Colosseum Standard Radio Node (SRN), and listen for incoming connections from RAN nodes implementing an E2 termination endpoint. The container logs can be read through the `docker logs` command, e.g., `docker logs e2term -f` shows the logs of the E2 termination (`e2term`) container.
 
+Take note of the IP address of the ColO-RAN near-RT RIC:
+
+{% highlight bash %}
+ifconfig col0 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}'
+{% endhighlight %}
 
 ### Connecting the SCOPE Base Station to ColO-RAN Near-RT RIC
 After the ColO-RAN neat-RT RIC is started following the previous steps, the SCOPE base station can be connected to it. To this aim, the SCOPE base station runs an instance of the O-RAN E2 termination, which we adapted from the O-RAN Software Community (OSC) Distributed Unit (DU) implementation. After connecting to the near-RT RIC, this component can exchange messages with the xApps running therein. Specifically, the E2 termination of the base station can:
@@ -50,10 +55,22 @@ After the ColO-RAN neat-RT RIC is started following the previous steps, the SCOP
 - receive RIC Control messages from the xApps
 - interface with the SCOPE Application Programming Interfaces (APIs) to modify the scheduling and slicing configurations of the base station based on the received xApp control
 
-We initialize the E2 termination on the SCOPE base station by typing the following commands on the SCOPE node.
+Before initializing the E2 termination on the SCOPE base station, we first need to pass the correct ColO-RAN near-RT RIC IP in `build_odu.sh`.
 
 {% highlight bash %}
 cd colosseum-scope-e2/
+nano build_odu.sh
+{% endhighlight %}
+
+Change the IP_RIC with the ip of the `coloran-near-rt-ric` you have previously found.
+
+{% highlight bash %}
+export RIC_HOST="IP_RIC"
+{% endhighlight %}
+
+Finally, build and run the E2 termination:
+
+{% highlight bash %}
 ./build_odu.sh clean
 ./run_odu.sh
 {% endhighlight %}
@@ -62,7 +79,7 @@ The E2 termination is first built through the `build_odu.sh` script, which also 
 
 
 ### Initializing a Sample xApp
-After starting the near-RT RIC, and connecting the SCOPE base station to it, the sample xApp provided as part of ColO-RAN can be initialized. This can be done through the `setup-sample-xapp.sh` script by typing the followint commands on the ColO-RAN node. This script takes as input the ID of the RAN node the xApp subscribes to (e.g., the base station), which can be read in the logs of the ColO-RAN `e2term` Docker container, as described in the previous sections. It then builds the Docker image of the sample xApp, and starts it as a Docker container on the near-RT RIC.
+After starting the near-RT RIC, and connecting the SCOPE base station to it, the sample xApp provided as part of ColO-RAN can be initialized. This can be done through the `setup-sample-xapp.sh` script by typing the followint commands on the ColO-RAN node. This script takes as input the ID of the RAN node the xApp subscribes to (e.g., the base station), which can be read in the logs of the ColO-RAN `e2mgr` Docker container, as described in the previous sections. It then builds the Docker image of the sample xApp, and starts it as a Docker container on the near-RT RIC.
 
 {% highlight bash %}
 cd setup-scripts/
